@@ -83,7 +83,6 @@ def createChannelFlowMesh(domain_size, mesh_size = 0.2, filename = '', directory
         mesh_size: Mesh size
         filename: Name of the mesh file
         directory: Directory where the mesh file is saved
-        
     Output:
         None
     '''

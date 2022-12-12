@@ -6,10 +6,13 @@ import matplotlib.pyplot as plt
 def plot_solution(mesh_name, mesh_directory, solution_directory, t):
     '''
     Plot fenics solution at different time steps.
-    mesh_name: name of the mesh file series. e.g. 'circle_0'.
-    mesh_directory: directory to mesh file.
-    solution_directory: directory containing targeted solution file 'velocity_series' and 'pressure_series'.
-    t: time step at which to plot the solution.
+    Input:
+        mesh_name: name of the mesh file series. e.g. 'circle_0'.
+        mesh_directory: directory to mesh file.
+        solution_directory: directory containing targeted solution file 'velocity_series' and 'pressure_series'.
+        t: time step at which to plot the solution.
+    Ouput:
+        None
     '''
     mesh, mf_boundaries, association_table = import_mesh(prefix=mesh_name, subdomains=False, directory=mesh_directory)
 
