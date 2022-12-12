@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<Xdmf Version="3.0">
+  <Domain>
+    <Grid GridType="Collection" CollectionType="Temporal" Name="p">
+      <Grid Name="p_0" GridType="Uniform">
+        <Topology NumberOfElements="1886" TopologyType="Triangle" NodesPerElement="3">
+          <DataItem Dimensions="1886 3" NumberType="UInt" Format="HDF">velocity_series.h5</DataItem>
+        </Topology>
+        <Geometry GeometryType="XY">
+          <DataItem Dimensions="1011 2" Format="HDF">velocity_series.h5</DataItem>
+        </Geometry>
+        <Time Value="10.000000" />
+        <Attribute ItemType="FiniteElementFunction" ElementFamily="CG" ElementDegree="1" ElementCell="triangle" Name="p" Center="Other" AttributeType="Scalar">
+          <DataItem Dimensions="5658 1" NumberType="UInt" Format="HDF">velocity_series.h5</DataItem>
+          <DataItem Dimensions="1011 1" NumberType="Float" Format="HDF">velocity_series.h5</DataItem>
+          <DataItem Dimensions="1887 1" NumberType="UInt" Format="HDF">velocity_series.h5</DataItem>
+          <DataItem Dimensions="1886 1" NumberType="UInt" Format="HDF">velocity_series.h5</DataItem>
+        </Attribute>
+      </Grid>
+    </Grid>
+  </Domain>
+</Xdmf>
