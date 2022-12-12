@@ -3,7 +3,7 @@ Preliminary scripts generating external flow simulation examples for graph ML.
 
 ## Overview
 Here we provide a repository for generation of large amounts of flow simulations with [fenics](https://fenicsproject.org/) and [oasis](https://github.com/mikaem/Oasis) solvers.
-Currently cylinder geometries, ellipse geometries and channel nozzle geometries are supported. Geometries are generated and meshed with a [gmsh] kernel(https://gmsh.info/), and mesh formats are processed with [meshio](https://github.com/nschloe/meshio) for adaptation to FEniCS.
+Currently cylinder geometries, ellipse geometries and channel nozzle geometries are supported. Geometries are generated and meshed with a [gmsh](https://gmsh.info/) kernel, and mesh formats are processed with [meshio](https://github.com/nschloe/meshio) for adaptation to FEniCS.
 
 ## Setup
 To create a environment using conda:
