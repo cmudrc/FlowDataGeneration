@@ -109,13 +109,13 @@ def temporal_hook(q_, u_, tstep, V, uv, p_, plot_interval, omega, ds,
 
 def theend_hook(q_, u_, p_, uv, mesh, ds, V, nu, Umean, D, **NS_namespace):
     uv()
-    plot(uv, title='Velocity')
-    plt.show()
-    plt.figure()
-    plot(p_, title='Pressure')
-    plt.show()
-    plt.figure()
-    plot(q_['alfa'], title='alfa')
+    # plot(uv, title='Velocity')
+    # plt.show()
+    # plt.figure()
+    # plot(p_, title='Pressure')
+    # plt.show()
+    # plt.figure()
+    # plot(q_['alfa'], title='alfa')
     R = VectorFunctionSpace(mesh, 'R', 0)
     c = TestFunction(R)
     tau = -p_ * Identity(2) + nu * (grad(u_) + grad(u_).T)
@@ -127,7 +127,7 @@ def theend_hook(q_, u_, p_, uv, mesh, ds, V, nu, Umean, D, **NS_namespace):
     # forces = assemble(dot(dot(tau, n), c) * ds(cylinder_id)).get_local() * 2 / Umean**2 / D
 
     print("Cd = {}, CL = {}".format(*forces))
-    plt.show()
+    # plt.show()
 
     from fenicstools import Probes
     from numpy import linspace, repeat, where, resize

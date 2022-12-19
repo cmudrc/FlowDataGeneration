@@ -1,6 +1,10 @@
 import meshio
 import os
 import numpy as np
+
+from dolfin import *
+from fenics import *
+from fenicstools.Interpolation import interpolate_nonmatching_mesh
 from configparser import ConfigParser
 try:
     from dolfin import XDMFFile, Mesh, MeshValueCollection
@@ -250,3 +254,144 @@ def import_mesh(
     else:
         return mesh, boundaries_mf, subdomains_mf, association_table
 
+
+def read_timeseries_to_npy(mesh_name, type):
+    """
+    Read Oasis TimeSeries and export to numpy arrays.
+    Input:
+        mesh_name: mesh prefix to read
+        type: 'circle' or 'ellipses' or 'channel'
+    Output:
+        None, value of all timesteps stored to numpy files
+    """
+    mesh_l, mf_boundaries_l, association_table_l = import_mesh(prefix=mesh_name, directory='mesh/{}/las'.format(type))
+    mesh_h, mf_boundaries_h, association_table_h = import_mesh(prefix=mesh_name, directory='mesh/{}/has'.format(type))
+
+    gdim = mesh_l.geometry().dim()
+    tdim = mesh_l.topology().dim()
+
+    V = FunctionSpace(mesh_h, 'CG', 2)
+    Q = FunctionSpace(mesh_h, 'CG', 1)
+    u0_ = Function(V)
+    u1_ = Function(V)
+    p_ = Function(Q)
+
+    Vl = FunctionSpace(mesh_l, 'CG', 2)
+    Ql = FunctionSpace(mesh_l, 'CG', 1)
+    u0_l = Function(Vl)
+    u1_l = Function(Vl)
+    p_l = Function(Ql)
+
+    # nv = mesh_l.num_vertices()
+    X = mesh_l.coordinates()
+    X = [X[:, i] for i in range(gdim)]
+
+    # Store mesh edges
+    lines = np.zeros((2*mesh_l.num_edges(), 2))
+    line_length = np.zeros(2*mesh_l.num_edges())
+    for i, edge in enumerate(edges(mesh_l)):
+        lines[2*i, :] = edge.entities(0)
+        lines[2*i+1, :] = np.flipud(edge.entities(0))
+        line_length[2*i] = edge.length()
+        line_length[2*i+1] = edge.length()
+
+    # Read solution
+    x = X[0]
+    y = X[1]
+
+    velocity_x = TimeSeries('solution/{}_has/data/1/Timeseries/u0_from_tstep_0'.format(mesh_name))
+    velocity_y = TimeSeries('solution/{}_has/data/1/Timeseries/u1_from_tstep_0'.format(mesh_name))
+    pressure = TimeSeries('solution/{}_has/data/1/Timeseries/p_from_tstep_0'.format(mesh_name))
+
+    velocity_xl = TimeSeries('solution/{}_las/data/1/Timeseries/u0_from_tstep_0'.format(mesh_name))
+    velocity_yl = TimeSeries('solution/{}_las/data/1/Timeseries/u1_from_tstep_0'.format(mesh_name))
+    pressure_l = TimeSeries('solution/{}_las/data/1/Timeseries/p_from_tstep_0'.format(mesh_name))
+    for t in range(1, 1001, 1):
+        velocity_x.retrieve(u0_.vector(), t)
+        velocity_y.retrieve(u1_.vector(), t)
+        pressure.retrieve(p_.vector(), t)
+        u0 = interpolate_nonmatching_mesh(u0_, Vl)
+        u1 = interpolate_nonmatching_mesh(u1_, Vl)
+        p = interpolate_nonmatching_mesh(p_, Ql)
+
+        w0 = u0.compute_vertex_values(mesh_l)
+        w1 = u1.compute_vertex_values(mesh_l)
+        C = p.compute_vertex_values(mesh_l)
+
+        result_hx = w0
+        result_hy = w1
+        result_hp = C
+
+        if os.path.exists('data/has'):
+            np.savez('data/has/{}_has_{}'.format(mesh_name, t), ux=result_hx, uy=result_hy, p=result_hp)
+        else:
+            os.makedirs('data/has')
+            np.savez('data/has/{}_has_{}'.format(mesh_name, t), ux=result_hx, uy=result_hy, p=result_hp)
+
+        velocity_xl.retrieve(u0_l.vector(), t)
+        velocity_yl.retrieve(u1_l.vector(), t)
+        pressure_l.retrieve(p_l.vector(), t)
+        u0_l_ = u0_l.compute_vertex_values(mesh_l)
+        u1_l_ = u1_l.compute_vertex_values(mesh_l)
+        p_l_ = p_l.compute_vertex_values(mesh_l)
+
+        result_lx = u0_l_
+        result_ly = u1_l_
+        result_lp = p_l_
+
+        if os.path.exists('data/las'):
+            np.savez('data/las/{}_las_{}'.format(mesh_name, t), ux=result_lx, uy=result_ly, p=result_lp)
+        else:
+            os.makedirs('data/las')
+            np.savez('data/las/{}_las_{}'.format(mesh_name, t), ux=result_lx, uy=result_ly, p=result_lp)
+
+    # save mesh
+    if os.path.exists('data/mesh'):
+        np.savez('data/mesh/{}'.format(mesh_name), x=x, y=y, edges=lines, edge_properties=line_length)
+    else:
+        os.makedirs('data/mesh')
+        np.savez('data/mesh/{}'.format(mesh_name), x=x, y=y, edges=lines, edge_properties=line_length)
+    
+
+def ensure_stable_calculation(mesh_name, type):
+    """
+    A small tool to check if the calculation is stable by examining the value at 1000th timestep.
+    Input:
+        mesh_name: mesh prefix to read
+        type: 'circle' or 'ellipses' or 'channel'
+    Output:
+        flag: True if stable, False if not
+    """
+    mesh_l, mf_boundaries_l, association_table_l = import_mesh(prefix=mesh_name, directory='mesh/{}/las'.format(type))
+    mesh_h, mf_boundaries_h, association_table_h = import_mesh(prefix=mesh_name, directory='mesh/{}/has'.format(type))
+
+    gdim = mesh_l.geometry().dim()
+    tdim = mesh_l.topology().dim()
+
+    Q = FunctionSpace(mesh_h, 'CG', 1)
+    p_ = Function(Q)
+    p1_ = Function(Q)
+
+    Ql = FunctionSpace(mesh_l, 'CG', 1)
+    pl_ = Function(Ql)
+    p1l_ = Function(Ql)
+
+    X = mesh_l.coordinates()
+    X = [X[:, i] for i in range(gdim)]
+
+    pressure = TimeSeries('solution/{}_has/data/1/Timeseries/p_from_tstep_0'.format(mesh_name))
+    pressure_l = TimeSeries('solution/{}_las/data/1/Timeseries/p_from_tstep_0'.format(mesh_name))
+
+    # check if 1000 timestep can be retrieved
+    
+    pressure.retrieve(p_.vector(), 1000)
+    pressure.retrieve(p1_.vector(), 999)
+    pressure_l.retrieve(pl_.vector(), 1000)
+    pressure_l.retrieve(p1l_.vector(), 999)
+    if np.allclose(p_.compute_vertex_values(mesh_h), p1_.compute_vertex_values(mesh_h)) or np.allclose(pl_.compute_vertex_values(mesh_l), p1l_.compute_vertex_values(mesh_l)):
+        flag = False
+    else:
+        flag = True
+    
+    return flag
+    

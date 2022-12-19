@@ -33,3 +33,5 @@ python NSfracStep.py problem=Cylinder meshname=ellipse_1 meshdir=io_operations T
 ```
 To run multiple simulations, refer to `simulation_series_oasis.py`. Simply run the script to perform simulation on all samples generated.
 Run 'simulation_series.py' to perform the same simulation on a naive IPCS implementation by directly encoding all the functions into FEniCS.
+
+### Construct dataset
