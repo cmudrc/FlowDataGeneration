@@ -87,9 +87,9 @@ def temporal_hook(q_, u_, tstep, V, uv, p_, plot_interval, omega, ds,
                   save_step, mesh, nu, Umean, D, n, **NS_namespace):
     if tstep % plot_interval == 0:
         uv()
-        plot(uv, title='Velocity')
-        plot(p_, title='Pressure')
-        plot(q_['alfa'], title='alfa')
+        # plot(uv, title='Velocity')
+        # plot(p_, title='Pressure')
+        # plot(q_['alfa'], title='alfa')
 
     R = VectorFunctionSpace(mesh, 'R', 0)
     c = TestFunction(R)
@@ -109,11 +109,20 @@ def temporal_hook(q_, u_, tstep, V, uv, p_, plot_interval, omega, ds,
 
 def theend_hook(q_, u_, p_, uv, mesh, ds, V, nu, Umean, D, **NS_namespace):
     uv()
-    # plot(uv, title='Velocity')
+    u_plot = plot(uv, mode='glyphs')
+    # plot colorbar with unit 'm/s'
+    cbar = plt.colorbar(u_plot, label='m/s')
+    cbar.ax.tick_params(labelsize=10)
+    plt.axis('off')
     # plt.show()
-    # plt.figure()
-    # plot(p_, title='Pressure')
-    # plt.show()
+    plt.figure()
+    p_plot = plot(p_)
+    # plot colorbar with unit pa
+    cbar_2 = plt.colorbar(p_plot, label='Pa')
+    cbar_2.ax.tick_params(labelsize=8)
+    plt.axis('off')
+    # plt.colorbar()
+    plt.show()
     # plt.figure()
     # plot(q_['alfa'], title='alfa')
     R = VectorFunctionSpace(mesh, 'R', 0)

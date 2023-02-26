@@ -99,17 +99,17 @@ def save_tstep_solution_h5(tstep, q_, u_, newfolder, tstepfiles, constrained_dom
                 V = q_['u0'].function_space()
                 # First time around create vector function and assigners
                 if not hasattr(tstepfile, 'uv'):
-                    # tstepfile.uv = AssignedVectorFunction(u_)
-                    vectorfunc = AssignedVectorFunction(u_)
+                    tstepfile.uv = AssignedVectorFunction(u_)
+                    # vectorfunc = AssignedVectorFunction(u_)
 
                 # Assign solution to vector
-                # tstepfile.uv()
-                vectorfunc()
-                vectorfunc.name = 'u'
+                tstepfile.uv()
+                # vectorfunc()
+                # vectorfunc.name = 'uv'
 
                 # Store solution vector
-                # tstepfile.write(tstepfile.uv, float(tstep))
-                tstepfile.write(vectorfunc, float(tstep))
+                tstepfile.write(tstepfile.uv, float(tstep))
+                # tstepfile.write(vectorfunc, float(tstep))
                 # tstepfile.store(vectorfunc, tstep)
 
             elif comp in q_:

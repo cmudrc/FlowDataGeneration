@@ -12,11 +12,11 @@ if __name__ == "__main__":
     mu = 0.001         # dynamic viscosity
     rho = 1            # density
     
-    directory = 'mesh/ellipse/'
-    for i in range(1000):
-        mesh_file_name = 'ellipse_{}'.format(i)
-        mesh_directory = os.path.join(directory, 'las')
-        save_file_dir = 'solution/ellipse_{}_las'.format(i)
+    directory = 'mesh/circle/'
+    for i in range(734, 735):
+        mesh_file_name = 'circle_{}'.format(i)
+        mesh_directory = os.path.join(directory, 'has')
+        save_file_dir = 'solution/circle_{}_has'.format(i)
         if not os.path.exists(save_file_dir):
             os.makedirs(save_file_dir)
 
