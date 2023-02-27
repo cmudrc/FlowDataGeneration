@@ -395,3 +395,64 @@ def ensure_stable_calculation(mesh_name, type):
     
     return flag
     
+
+def read_mesh_to_npy(mesh_name, type):
+    """
+    Read mesh and solution from .xdmf file and save them as .npy file
+    Input:
+        mesh_name: mesh prefix to read
+        type: 'circle' or 'ellipses' or 'channel'
+    Output:
+        None
+    """
+    mesh_l, mf_boundaries_l, association_table_l = import_mesh(prefix=mesh_name, directory='mesh/{}/las'.format(type))
+    mesh_h, mf_boundaries_h, association_table_h = import_mesh(prefix=mesh_name, directory='mesh/{}/has'.format(type))
+
+    gdim = mesh_l.geometry().dim()
+
+    X = mesh_l.coordinates()
+    X = [X[:, i] for i in range(gdim)]
+
+    # Store mesh edges
+    lines = np.zeros((2*mesh_l.num_edges(), 2))
+    line_length = np.zeros(2*mesh_l.num_edges())
+    for i, edge in enumerate(edges(mesh_l)):
+        lines[2*i, :] = edge.entities(0)
+        lines[2*i+1, :] = np.flipud(edge.entities(0))
+        line_length[2*i] = edge.length()
+        line_length[2*i+1] = edge.length()
+
+    # Read solution
+    x = X[0]
+    y = X[1]
+
+    # save mesh
+    if os.path.exists('data/mesh/las'):
+        np.savez('data/mesh/las/{}'.format(mesh_name), x=x, y=y, edges=lines, edge_properties=line_length)
+    else:
+        os.makedirs('data/mesh/las', exist_ok=True)
+        np.savez('data/mesh/las/{}'.format(mesh_name), x=x, y=y, edges=lines, edge_properties=line_length)
+   
+    X = mesh_h.coordinates()
+    X = [X[:, i] for i in range(gdim)]
+
+    # Store mesh edges
+    lines = np.zeros((2*mesh_h.num_edges(), 2))
+    line_length = np.zeros(2*mesh_h.num_edges())
+    for i, edge in enumerate(edges(mesh_h)):
+        lines[2*i, :] = edge.entities(0)
+        lines[2*i+1, :] = np.flipud(edge.entities(0))
+        line_length[2*i] = edge.length()
+        line_length[2*i+1] = edge.length()
+
+    # Read solution
+    x = X[0]
+    y = X[1]
+
+    # save mesh
+    if os.path.exists('data/mesh/has'):
+        np.savez('data/mesh/has/{}'.format(mesh_name), x=x, y=y, edges=lines, edge_properties=line_length)
+    else:
+        os.makedirs('data/mesh/has', exist_ok=True)
+        np.savez('data/mesh/has/{}'.format(mesh_name), x=x, y=y, edges=lines, edge_properties=line_length)
+   
