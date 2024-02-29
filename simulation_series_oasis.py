@@ -6,14 +6,14 @@ from dolfin import *
 
 
 if __name__ == "__main__":
-    T = 10            # final time
-    num_steps = 1000   # number of time steps
+    T = 20            # final time
+    num_steps = 5000   # number of time steps
     dt = T / num_steps # time step size
-    mu = 0.001         # dynamic viscosity
+    mu = 0.01         # dynamic viscosity
     rho = 1            # density
     
     directory = 'mesh/circle/'
-    for i in range(734, 735):
+    for i in range(1):
         mesh_file_name = 'circle_{}'.format(i)
         mesh_directory = os.path.join(directory, 'has')
         save_file_dir = 'solution/circle_{}_has'.format(i)

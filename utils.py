@@ -1,6 +1,9 @@
 import meshio
 import os
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.tri import Triangulation
+import matplotlib.ticker as ticker
 
 from dolfin import *
 from fenics import *
@@ -267,6 +270,8 @@ def read_timeseries_to_npy(mesh_name, type):
     mesh_l, mf_boundaries_l, association_table_l = import_mesh(prefix=mesh_name, directory='mesh/{}/las'.format(type))
     mesh_h, mf_boundaries_h, association_table_h = import_mesh(prefix=mesh_name, directory='mesh/{}/has'.format(type))
 
+    geometry_index = mesh_name
+
     gdim = mesh_l.geometry().dim()
     tdim = mesh_l.topology().dim()
 
@@ -283,13 +288,14 @@ def read_timeseries_to_npy(mesh_name, type):
     p_l = Function(Ql)
 
     # nv = mesh_l.num_vertices()
-    X = mesh_l.coordinates()
+    X = mesh_h.coordinates()
     X = [X[:, i] for i in range(gdim)]
 
     # Store mesh edges
-    lines = np.zeros((2*mesh_l.num_edges(), 2))
-    line_length = np.zeros(2*mesh_l.num_edges())
-    for i, edge in enumerate(edges(mesh_l)):
+    lines = np.zeros((2*mesh_h.num_edges(), 2))
+    line_length = np.zeros(2*mesh_h.num_edges())
+    cells = np.array(mesh_h.cells())
+    for i, edge in enumerate(edges(mesh_h)):
         lines[2*i, :] = edge.entities(0)
         lines[2*i+1, :] = np.flipud(edge.entities(0))
         line_length[2*i] = edge.length()
@@ -306,17 +312,21 @@ def read_timeseries_to_npy(mesh_name, type):
     velocity_xl = TimeSeries('solution/{}_las/data/1/Timeseries/u0_from_tstep_0'.format(mesh_name))
     velocity_yl = TimeSeries('solution/{}_las/data/1/Timeseries/u1_from_tstep_0'.format(mesh_name))
     pressure_l = TimeSeries('solution/{}_las/data/1/Timeseries/p_from_tstep_0'.format(mesh_name))
-    for t in range(1, 1001, 1):
+    for t in range(1000, 1001, 1):
+        time_index = t
         velocity_x.retrieve(u0_.vector(), t)
         velocity_y.retrieve(u1_.vector(), t)
         pressure.retrieve(p_.vector(), t)
-        u0 = interpolate_nonmatching_mesh(u0_, Vl)
-        u1 = interpolate_nonmatching_mesh(u1_, Vl)
-        p = interpolate_nonmatching_mesh(p_, Ql)
-
-        w0 = u0.compute_vertex_values(mesh_l)
-        w1 = u1.compute_vertex_values(mesh_l)
-        C = p.compute_vertex_values(mesh_l)
+        # # plot velocity contour  
+        # plot(u0_, title='u0')
+        # plt.savefig('data/has/{}_has_{}_u0.png'.format(mesh_name, t))
+        # plt.figure()
+        # plot(u1_, title='u1')
+        # plt.savefig('data/has/{}_has_{}_u1.png'.format(mesh_name, t))
+        # plt.show()
+        w0 = u0_.compute_vertex_values(mesh_h)
+        w1 = u1_.compute_vertex_values(mesh_h)
+        C = p_.compute_vertex_values(mesh_h)
 
         result_hx = w0
         result_hy = w1
@@ -331,26 +341,94 @@ def read_timeseries_to_npy(mesh_name, type):
         velocity_xl.retrieve(u0_l.vector(), t)
         velocity_yl.retrieve(u1_l.vector(), t)
         pressure_l.retrieve(p_l.vector(), t)
-        u0_l_ = u0_l.compute_vertex_values(mesh_l)
-        u1_l_ = u1_l.compute_vertex_values(mesh_l)
-        p_l_ = p_l.compute_vertex_values(mesh_l)
+        
+        ###############################################
+        # plot velocity contour of las and has and overlay with mesh
+        fig, ax = plt.subplots(2, 1, figsize=(18, 12))
+        plt.rcParams.update({'font.size': 20})
+        w = np.sqrt(w0**2 + w1**2)
+        ax[1].tricontourf(x, y, cells, w, cmap='jet', levels=100)
+        tri_h = Triangulation(x, y, cells)
+        # ax[1].triplot(tri_h, 'k-', linewidth=0.5)
+        ax[1].axis('off')
+        ax[1].set_title('(b) High resolution simulation', y=-0.1)
+
+        w0_l = u0_l.compute_vertex_values(mesh_l)
+        w1_l = u1_l.compute_vertex_values(mesh_l)
+        w_l = np.sqrt(w0_l**2 + w1_l**2)
+        x_l = mesh_l.coordinates()[:, 0]
+        y_l = mesh_l.coordinates()[:, 1]
+        cells_l = np.array(mesh_l.cells())
+        ax[0].tricontourf(x_l, y_l, cells_l, w_l, cmap='jet', levels=100)
+        tri_l = Triangulation(x_l, y_l, cells_l)
+        ax[0].triplot(tri_l, 'k-', linewidth=0.5)
+        ax[0].axis('off')
+        ax[0].set_title('(a) Low resolution simulation', y=-0.1)
+        fig.tight_layout()
+        cb1 = fig.colorbar(ax[1].tricontourf(x, y, cells, w, cmap='jet', levels=100), ax=ax.ravel().tolist(), shrink=0.95, location='right', pad=0.05, label='Velocity magnitude (m/s)')
+        cb1.locator = ticker.MaxNLocator(nbins=6)
+        # cb1.update_ticks()
+        cb1.set_ticks([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
+        ax[1].triplot(tri_h, 'k-', linewidth=0.5)
+        plt.savefig('data/{}_compare_{}_velocity.png'.format(mesh_name, t))
+
+
+        # plot pressure contour of las and has and overlay with mesh
+        fig, ax = plt.subplots(2, 1, figsize=(18, 12))
+        plt.rcParams.update({'font.size': 20})
+        ax[1].tricontourf(x, y, cells, C, cmap='jet', levels=100)
+        tri_h = Triangulation(x, y, cells)
+        
+        ax[1].axis('off')
+        ax[1].set_title('(b) High resolution simulation', y=-0.1)
+
+        C_l = p_l.compute_vertex_values(mesh_l)
+        ax[0].tricontourf(x_l, y_l, cells_l, C_l, cmap='jet', levels=100)
+        tri_l = Triangulation(x_l, y_l, cells_l)
+        ax[0].triplot(tri_l, 'k-', linewidth=0.5)
+        ax[0].axis('off')
+        ax[0].set_title('(a) Low resolution simulation', y=-0.1)
+        fig.tight_layout()
+        cb2 = fig.colorbar(ax[1].tricontourf(x, y, cells, C, cmap='jet', levels=100), ax=ax.ravel().tolist(), shrink=0.95, location='right', pad=0.05, label='Pressure (Pa)')
+        cb2.locator = ticker.MaxNLocator(nbins=8)
+        # cb2.update_ticks()
+        cb2.set_ticks([-4.5, -3.0, -1.0, 1.0, 3.0, 5.0, 7.0, 9.0])
+        ax[1].triplot(tri_h, 'k-', linewidth=0.5)
+        plt.savefig('data/{}_compare_{}_pressure.png'.format(mesh_name, t))
+
+        ###############################################
+
+        u0_l_ = interpolate_nonmatching_mesh(u0_l, V)
+        u1_l_ = interpolate_nonmatching_mesh(u1_l, V)
+        p_l_ = interpolate_nonmatching_mesh(p_l, Q)
+                
+        # plt.figure()
+        # plot(u0_l_, title='u0')
+        # plt.savefig('data/las/{}_las_{}_u0_interpolate.png'.format(mesh_name, t))
+        # plt.figure()
+        # plot(u1_l_, title='u1')
+        # plt.savefig('data/las/{}_las_{}_u1_interpolate.png'.format(mesh_name, t))
+
+        u0_l_ = u0_l_.compute_vertex_values(mesh_h)
+        u1_l_ = u1_l_.compute_vertex_values(mesh_h)
+        p_l_ = p_l_.compute_vertex_values(mesh_h)
 
         result_lx = u0_l_
         result_ly = u1_l_
         result_lp = p_l_
 
         if os.path.exists('data/las'):
-            np.savez('data/las/{}_las_{}'.format(mesh_name, t), ux=result_lx, uy=result_ly, p=result_lp)
+            np.savez('data/las/{}_las_{}'.format(mesh_name, t), ux=result_lx, uy=result_ly, p=result_lp, geometry_index=geometry_index, time_index=time_index)
         else:
             os.makedirs('data/las')
-            np.savez('data/las/{}_las_{}'.format(mesh_name, t), ux=result_lx, uy=result_ly, p=result_lp)
+            np.savez('data/las/{}_las_{}'.format(mesh_name, t), ux=result_lx, uy=result_ly, p=result_lp, geometry_index=geometry_index, time_index=time_index)
 
     # save mesh
     if os.path.exists('data/mesh'):
-        np.savez('data/mesh/{}'.format(mesh_name), x=x, y=y, edges=lines, edge_properties=line_length)
+        np.savez('data/mesh/{}'.format(mesh_name), x=x, y=y, edges=lines, edge_properties=line_length, cells=cells, geometry_index=geometry_index)
     else:
         os.makedirs('data/mesh')
-        np.savez('data/mesh/{}'.format(mesh_name), x=x, y=y, edges=lines, edge_properties=line_length)
+        np.savez('data/mesh/{}'.format(mesh_name), x=x, y=y, edges=lines, edge_properties=line_length, cells=cells, geometry_index=geometry_index)
     
 
 def ensure_stable_calculation(mesh_name, type):
@@ -384,9 +462,9 @@ def ensure_stable_calculation(mesh_name, type):
 
     # check if 1000 timestep can be retrieved
     
-    pressure.retrieve(p_.vector(), 1000)
+    pressure.retrieve(p_.vector(), 998)
     pressure.retrieve(p1_.vector(), 999)
-    pressure_l.retrieve(pl_.vector(), 1000)
+    pressure_l.retrieve(pl_.vector(), 998)
     pressure_l.retrieve(p1l_.vector(), 999)
     if np.allclose(p_.compute_vertex_values(mesh_h), p1_.compute_vertex_values(mesh_h)) or np.allclose(pl_.compute_vertex_values(mesh_l), p1l_.compute_vertex_values(mesh_l)):
         flag = False

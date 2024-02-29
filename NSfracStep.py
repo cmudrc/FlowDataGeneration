@@ -33,11 +33,14 @@ problems/NSfracStep/__init__.py for all possible parameters.
 
 """
 import importlib
+import wandb
 from oasis.common import *
 from fenics import *
 from dolfin import *
 from utils import import_mesh
 import global_variables
+
+wandb.init(project="oasis")
 
 global_variables._init()
 commandline_kwargs = parse_command_line()

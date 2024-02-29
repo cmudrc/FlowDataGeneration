@@ -320,7 +320,7 @@ class CG1Function(OasisFunction):
             self.bound()
 
     def bound(self):
-        self.vector().set_local(self.vector().array().clip(min=0))
+        self.vector().set_local(self.vector().get_local().clip(min=0))
         self.vector().apply("insert")
 
 

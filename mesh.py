@@ -1,5 +1,7 @@
-
 import os
+
+os.environ['HDF5_DISABLE_VERSION_CHECK'] = '2' # Only add this for TRACE to work, comment out for other cases! 
+
 from cmath import pi
 import numpy as np
 import gmsh
@@ -136,34 +138,34 @@ def createChannelFlowMesh(domain_size, mesh_size = 0.2, filename = '', directory
 
 if __name__ == "__main__":
     
-    domain_size = np.array([20, 10])
+    domain_size = np.array([0.018, 0.006])
 
     # generate 1000 samples for cylinders
-    for i in range(1000):
-        x_coordinate = random.uniform(4, 10)
-        y_coordinate = random.uniform(2, 8)
-        r = random.uniform(1, np.min([x_coordinate-3, domain_size[0]-x_coordinate-1, y_coordinate-1, domain_size[1]-y_coordinate-1]))
-        createFreeFlowMesh(domain_size, 'circle', np.array([x_coordinate, y_coordinate]), r, mesh_size=0.3, filename='circle_{}'.format(i), directory='mesh/circle/has')
-        createFreeFlowMesh(domain_size, 'circle', np.array([x_coordinate, y_coordinate]), r, mesh_size=2, filename='circle_{}'.format(i), directory='mesh/circle/las')
+    for i in range(1):
+        x_coordinate = random.uniform(0.004, 0.01)
+        y_coordinate = random.uniform(0.0025, 0.0035)
+        r = random.uniform(0.001, np.min([x_coordinate-0.003, domain_size[0]-x_coordinate-0.001, y_coordinate-0.001, domain_size[1]-y_coordinate-0.001]))
+        createFreeFlowMesh(domain_size, 'circle', np.array([x_coordinate, y_coordinate]), r, mesh_size=1e-6, filename='circle_{}'.format(i), directory='mesh/circle/has')
+        # createFreeFlowMesh(domain_size, 'circle', np.array([x_coordinate, y_coordinate]), r, mesh_size=0.03, filename='circle_{}'.format(i), directory='mesh/circle/las')
 
-    # generate 1000 samples for ellipses
-    for j in range(1000):
-        x_coordinate = random.uniform(4, 10)
-        y_coordinate = random.uniform(2, 8)
-        a = random.uniform(1, np.min([x_coordinate-3, domain_size[0]-x_coordinate-1, y_coordinate-1, domain_size[1]-y_coordinate-1]))
-        b = random.uniform(0.5, 0.7 * np.min([x_coordinate-3, domain_size[0]-x_coordinate-1, y_coordinate-1, domain_size[1]-y_coordinate-1]))
-        long_axis = np.max([a, b])
-        short_axis = np.min([a, b])
-        angle = random.uniform(0, 180)
-        createFreeFlowMesh(domain_size, 'ellipse', np.array([x_coordinate, y_coordinate, angle]), np.array([long_axis, short_axis]), mesh_size=0.3, filename='ellipse_{}'.format(j), directory='mesh/ellipse/has')
-        createFreeFlowMesh(domain_size, 'ellipse', np.array([x_coordinate, y_coordinate, angle]), np.array([long_axis, short_axis]), mesh_size=2, filename='ellipse_{}'.format(j), directory='mesh/ellipse/las')
+    # # generate 1000 samples for ellipses
+    # for j in range(200):
+    #     x_coordinate = random.uniform(4, 10)
+    #     y_coordinate = random.uniform(2.5, 3.5)
+    #     a = random.uniform(1, np.min([x_coordinate-3, domain_size[0]-x_coordinate-1, y_coordinate-1, domain_size[1]-y_coordinate-1]))
+    #     b = random.uniform(0.5, 0.7 * np.min([x_coordinate-3, domain_size[0]-x_coordinate-1, y_coordinate-1, domain_size[1]-y_coordinate-1]))
+    #     long_axis = np.max([a, b])
+    #     short_axis = np.min([a, b])
+    #     angle = random.uniform(0, 180)
+    #     createFreeFlowMesh(domain_size, 'ellipse', np.array([x_coordinate, y_coordinate, angle]), np.array([long_axis, short_axis]), mesh_size=0.1, filename='ellipse_{}'.format(j), directory='mesh/ellipse/has')
+    #     createFreeFlowMesh(domain_size, 'ellipse', np.array([x_coordinate, y_coordinate, angle]), np.array([long_axis, short_axis]), mesh_size=0.3, filename='ellipse_{}'.format(j), directory='mesh/ellipse/las')
 
-    # generate 1000 samples for channels
-    for k in range(1000):
-        channel_width = 5
-        nozzle_length = random.uniform(0.5, 6)
-        expansion_ratio = random.uniform(2, 5)
+    # # generate 1000 samples for channels
+    # for k in range(1000):
+    #     channel_width = 5
+    #     nozzle_length = random.uniform(0.5, 6)
+    #     expansion_ratio = random.uniform(2, 5)
 
-        domain_size = np.array([channel_width, expansion_ratio, nozzle_length])
-        createChannelFlowMesh(domain_size, mesh_size=0.1, filename='channel_{}'.format(k), directory='mesh/channel/has')
-        createChannelFlowMesh(domain_size, mesh_size=0.5, filename='channel_{}'.format(k), directory='mesh/channel/las')
+    #     domain_size = np.array([channel_width, expansion_ratio, nozzle_length])
+    #     createChannelFlowMesh(domain_size, mesh_size=0.1, filename='channel_{}'.format(k), directory='mesh/channel/has')
+    #     createChannelFlowMesh(domain_size, mesh_size=0.5, filename='channel_{}'.format(k), directory='mesh/channel/las')

@@ -4,7 +4,7 @@ __copyright__ = 'Copyright (C) 2015 ' + __author__
 __license__ = 'GNU Lesser GPL version 3 or any later version'
 
 from dolfin import (Function, FunctionSpace, assemble, TestFunction, sym, grad, dx, inner, sqrt,
-    FacetFunction, DirichletBC, Constant)
+    MeshFunction, DirichletBC, Constant)
 
 from .common import derived_bcs
 
@@ -22,7 +22,7 @@ def les_setup(u_, mesh, Smagorinsky, CG1Function, nut_krylov_solver, bcs, **NS_n
     dim = mesh.geometry().dim()
     delta = Function(DG)
     delta.vector().zero()
-    delta.vector().set_local(assemble(TestFunction(DG) * dx).array()**(1. / dim))
+    delta.vector().set_local(assemble(TestFunction(DG) * dx).get_local()**(1. / dim))
     delta.vector().apply('insert')
 
     # Set up Smagorinsky form

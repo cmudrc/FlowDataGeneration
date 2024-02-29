@@ -35,7 +35,7 @@ NS_parameters.update(
 
     # Choose LES model and set default parameters
     # NoModel, Smagorinsky, Wale, DynamicLagrangian, ScaleDepDynamicLagrangian
-    les_model='NoModel',
+    les_model='Smagorinsky',
 
     # LES model parameters
     Smagorinsky=dict(Cs=0.1677),              # Standard Cs, same as OpenFOAM
