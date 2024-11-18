@@ -431,6 +431,74 @@ def read_timeseries_to_npy(mesh_name, type):
         np.savez('data/mesh/{}'.format(mesh_name), x=x, y=y, edges=lines, edge_properties=line_length, cells=cells, geometry_index=geometry_index)
     
 
+def plot_velocity_contour(mesh_name, t, type='circle'):
+    """
+    Plot velocity contour of las and has and overlay with mesh
+    Input:
+        mesh_name: mesh prefix to read
+        t: time index
+    Output:
+        None, plot saved to file
+    """
+    mesh_h, mf_boundaries_h, association_table_h = import_mesh(prefix=mesh_name, directory='mesh/{}/has'.format(type))
+
+    gdim = mesh_h.geometry().dim()
+    tdim = mesh_h.topology().dim()
+
+    V = FunctionSpace(mesh_h, 'CG', 2)
+    Q = FunctionSpace(mesh_h, 'CG', 1)
+    u0_ = Function(V)
+    u1_ = Function(V)
+    p_ = Function(Q)
+
+    # nv = mesh_l.num_vertices()
+    X = mesh_h.coordinates()
+    X = [X[:, i] for i in range(gdim)]
+
+    # Store mesh edges
+    lines = np.zeros((2*mesh_h.num_edges(), 2))
+    line_length = np.zeros(2*mesh_h.num_edges())
+    cells = np.array(mesh_h.cells())
+    for i, edge in enumerate(edges(mesh_h)):
+        lines[2*i, :] = edge.entities(0)
+        lines[2*i+1, :] = np.flipud(edge.entities(0))
+        line_length[2*i] = edge.length()
+        line_length[2*i+1] = edge.length()
+
+    # Read solution
+    x = X[0]
+    y = X[1]
+
+    velocity_x = TimeSeries('solution/{}_has/data/3/Timeseries/u0_from_tstep_0'.format(mesh_name))
+    velocity_y = TimeSeries('solution/{}_has/data/3/Timeseries/u1_from_tstep_0'.format(mesh_name))
+    pressure = TimeSeries('solution/{}_has/data/3/Timeseries/p_from_tstep_0'.format(mesh_name))
+
+    velocity_x.retrieve(u0_.vector(), t)
+    velocity_y.retrieve(u1_.vector(), t)
+    pressure.retrieve(p_.vector(), t)
+    # plot velocity contour
+    w0 = u0_.compute_vertex_values(mesh_h)
+    w1 = u1_.compute_vertex_values(mesh_h)
+    C = p_.compute_vertex_values(mesh_h)
+
+    # result_hx = w0
+    # result_hy = w1
+    # result_hp = C
+
+    w = np.sqrt(w0**2 + w1**2)
+
+    fig, ax = plt.subplots(1, 1, figsize=(26, 12))
+    plt.rcParams.update({'font.size': 20})
+    w = np.sqrt(w0**2 + w1**2)
+    ax.tricontourf(x, y, cells, w, cmap='jet', levels=100)
+    # tri_h = Triangulation(x, y, cells)
+    # ax.triplot(tri_h, 'k-', linewidth=0.5)
+    ax.axis('off')
+    ax.set_title('High resolution simulation', y=-0.1)
+    fig.tight_layout()
+    plt.savefig('{}_has_{}_velocity.png'.format(mesh_name, t))
+
+
 def ensure_stable_calculation(mesh_name, type):
     """
     A small tool to check if the calculation is stable by examining the value at 1000th timestep.

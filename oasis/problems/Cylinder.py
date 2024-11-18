@@ -44,8 +44,8 @@ D = 2 * np.sum(geo_spec['size'])
 center_x = geo_spec['position'][0]
 center_y = geo_spec['position'][1]
 cases = {
-    1: {'Um': 20,
-        'Re': 20 * D / 0.01},
+    1: {'Um': 500,
+        'Re': 500 * D / 0.001},
 
     2: {'Um': 10,
         'Re': 1000.0}
@@ -55,7 +55,7 @@ cases = {
 
 inflow_id = association_table['inflow']
 outflow_id = association_table['outflow']
-walls_id = association_table['walls']
+# walls_id = association_table['wall']
 cylinder_id = association_table[type]
 
 # Inlet = inflow_id
@@ -65,8 +65,8 @@ cylinder_id = association_table[type]
 
 Inlet = AutoSubDomain(lambda x, on_bnd: on_bnd and x[0] < 1e-8)
 Wall = AutoSubDomain(lambda x, on_bnd: on_bnd and near(x[1] * (H - x[1]), 0))
-Cyl = AutoSubDomain(lambda x, on_bnd: (on_bnd and x[0] > 1 and x[0] < 17
-                                      and x[1] < 5.5 and x[1] > 0.5))
+Cyl = AutoSubDomain(lambda x, on_bnd: (on_bnd and x[0] > 1e-4 and x[0] < H-1e-4
+                                      and x[1] < H-1e-4 and x[1] > 1e-4))
 Outlet = AutoSubDomain(lambda x, on_bnd: on_bnd and x[0] > L - 1e-8)
 
 

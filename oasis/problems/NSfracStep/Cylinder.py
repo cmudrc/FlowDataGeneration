@@ -46,7 +46,7 @@ def create_bcs(V, Q, Um, H, **NS_namespace):
     bc01 = DirichletBC(V, 0, Inlet)
     bc10 = DirichletBC(V, ux, Cyl)
     bc11 = DirichletBC(V, uy, Cyl)
-    bc2 = DirichletBC(V, 0, Wall)
+    bc2 = DirichletBC(Q, 0, Wall)
     bcp = DirichletBC(Q, 0, Outlet)
     bca = DirichletBC(V, 1, Cyl)
 
@@ -57,8 +57,12 @@ def create_bcs(V, Q, Um, H, **NS_namespace):
     # bc2 = DirichletBC(V, 0, mf_boundaries, Wall)
     # bcp = DirichletBC(Q, 0, mf_boundaries, Outlet)
     # bca = DirichletBC(V, 1, mf_boundaries, Cyl)
-    return dict(u0=[bc00, bc10, bc2],
-                u1=[bc01, bc11, bc2],
+    # return dict(u0=[bc00, bc10, bc2],
+    #             u1=[bc01, bc11, bc2],
+    #             p=[bcp],
+    #             alfa=[bca])
+    return dict(u0=[bc00, bc10],
+                u1=[bc01, bc11],
                 p=[bcp],
                 alfa=[bca])
 
@@ -93,16 +97,16 @@ def temporal_hook(q_, u_, tstep, V, uv, p_, plot_interval, omega, ds,
 
     R = VectorFunctionSpace(mesh, 'R', 0)
     c = TestFunction(R)
-    tau = -p_ * Identity(2) + nu * (grad(u_) + grad(u_).T)
-    forces = assemble(dot(dot(tau, n), c) * ds(1)).get_local() * 2 / Umean**2 / D
+    # tau = -p_ * Identity(2) + nu * (grad(u_) + grad(u_).T)
+    # forces = assemble(dot(dot(tau, n), c) * ds(1)).get_local() * 2 / Umean**2 / D
     # forces = assemble(dot(dot(tau, n), c) * ds(cylinder_id)).get_local() * 2 / Umean**2 / D
 
-    print("Cd = {}, CL = {}".format(*forces))
+    # print("Cd = {}, CL = {}".format(*forces))
 
     if tstep % save_step == 0:
         try:
             from fenicstools import StreamFunction
-            omega.assign(StreamFunction(u_, []))
+            omega.assign(StreamFunction(u_, [], mesh))
         except:
             omega.assign(project(curl(u_), V,
                                  bcs=[DirichletBC(V, 0, DomainBoundary())]))
@@ -127,15 +131,15 @@ def theend_hook(q_, u_, p_, uv, mesh, ds, V, nu, Umean, D, **NS_namespace):
     # plot(q_['alfa'], title='alfa')
     R = VectorFunctionSpace(mesh, 'R', 0)
     c = TestFunction(R)
-    tau = -p_ * Identity(2) + nu * (grad(u_) + grad(u_).T)
-    ff = MeshFunction("size_t", mesh, mesh.ufl_cell().geometric_dimension()-1)
-    Cyl.mark(ff, 1)
-    n = FacetNormal(mesh)
-    ds = ds[ff]
-    forces = assemble(dot(dot(tau, n), c) * ds(1)).get_local() * 2 / Umean**2 / D
-    # forces = assemble(dot(dot(tau, n), c) * ds(cylinder_id)).get_local() * 2 / Umean**2 / D
+    # tau = -p_ * Identity(2) + nu * (grad(u_) + grad(u_).T)
+    # ff = MeshFunction("size_t", mesh, mesh.ufl_cell().geometric_dimension()-1)
+    # Cyl.mark(ff, 1)
+    # n = FacetNormal(mesh)
+    # ds = ds[ff]
+    # forces = assemble(dot(dot(tau, n), c) * ds(1)).get_local() * 2 / Umean**2 / D
+    # # forces = assemble(dot(dot(tau, n), c) * ds(cylinder_id)).get_local() * 2 / Umean**2 / D
 
-    print("Cd = {}, CL = {}".format(*forces))
+    # print("Cd = {}, CL = {}".format(*forces))
     # plt.show()
 
     from fenicstools import Probes

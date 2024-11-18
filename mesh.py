@@ -46,6 +46,7 @@ def createFreeFlowMesh(domain_size, type, position, size, mesh_size = 0.2, filen
         gmsh.model.occ.addCurveLoop([5], tag=2)
         gmsh.model.occ.addPlaneSurface([1, 2], tag=1)
         gmsh.model.occ.mesh.setSize(gmsh.model.occ.getEntities(0), mesh_size)
+        pass
 
     elif(type == 'ellipse'):
         xAxis = np.array([1, np.arctan(position[2] * np.pi / 180), 0])
@@ -60,7 +61,7 @@ def createFreeFlowMesh(domain_size, type, position, size, mesh_size = 0.2, filen
 
     gmsh.model.addPhysicalGroup(1, [2], 1, "inflow")
     gmsh.model.addPhysicalGroup(1, [3], 2, "outflow")
-    gmsh.model.addPhysicalGroup(1, [1, 4], 3, "walls")
+    gmsh.model.addPhysicalGroup(1, [1, 4], 3, "free_boundary")
     gmsh.model.addPhysicalGroup(1, [5], 4, type)
     gmsh.model.addPhysicalGroup(2, [1], 5, "flow_domain")
 
@@ -138,15 +139,16 @@ def createChannelFlowMesh(domain_size, mesh_size = 0.2, filename = '', directory
 
 if __name__ == "__main__":
     
-    domain_size = np.array([0.018, 0.006])
+    domain_size = np.array([0.018, 0.016])
 
     # generate 1000 samples for cylinders
-    for i in range(1):
+    for i in range(2):
         x_coordinate = random.uniform(0.004, 0.01)
-        y_coordinate = random.uniform(0.0025, 0.0035)
-        r = random.uniform(0.001, np.min([x_coordinate-0.003, domain_size[0]-x_coordinate-0.001, y_coordinate-0.001, domain_size[1]-y_coordinate-0.001]))
-        createFreeFlowMesh(domain_size, 'circle', np.array([x_coordinate, y_coordinate]), r, mesh_size=1e-6, filename='circle_{}'.format(i), directory='mesh/circle/has')
-        # createFreeFlowMesh(domain_size, 'circle', np.array([x_coordinate, y_coordinate]), r, mesh_size=0.03, filename='circle_{}'.format(i), directory='mesh/circle/las')
+        y_coordinate = random.uniform(0.0065, 0.0095)
+        # r = random.uniform(0.001, np.min([x_coordinate-0.003, domain_size[0]-x_coordinate-0.001, y_coordinate-0.001, domain_size[1]-y_coordinate-0.001]))
+        r = 0.003
+        createFreeFlowMesh(domain_size, 'circle', np.array([x_coordinate, y_coordinate]), r, mesh_size=1e-4, filename='circle_{}'.format(i), directory='mesh/circle/has')
+        createFreeFlowMesh(domain_size, 'circle', np.array([x_coordinate, y_coordinate]), r, mesh_size=0.03, filename='circle_{}'.format(i), directory='mesh/circle/las')
 
     # # generate 1000 samples for ellipses
     # for j in range(200):

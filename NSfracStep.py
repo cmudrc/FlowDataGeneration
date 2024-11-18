@@ -38,6 +38,7 @@ from oasis.common import *
 from fenics import *
 from dolfin import *
 from utils import import_mesh
+from time import time
 import global_variables
 
 wandb.init(project="oasis")
@@ -83,7 +84,7 @@ uc_comp = u_components + scalar_components
 newfolder, tstepfiles = create_initial_folders(**vars())
 # timeseries_u0 = TimeSeries('oasis/velocity_series')
 # timeseries_p = TimeSeries('oasis/pressure_series')
-
+start_time = time()
 # Declare FunctionSpaces and arguments
 V = Q = FunctionSpace(mesh, 'CG', velocity_degree,
                       constrained_domain=constrained_domain)
@@ -249,7 +250,10 @@ while t < (T - tstep * DOLFIN_EPS) and not stop:
     # AB projection for pressure on next timestep
     if AB_projection_pressure and t < (T - tstep * DOLFIN_EPS) and not stop:
         x_['p'].axpy(0.5, dp_.vector())
-
+    cur_time = time()
+    step_time = cur_time - start_time
+    start_time = cur_time
+    wandb.log({'step_time': step_time})
 total_timer.stop()
 list_timings(TimingClear.keep, [TimingType.wall])
 info_red('Total computing time = {0:f}'.format(total_timer.elapsed()[0]))
